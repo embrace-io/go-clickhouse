@@ -17,16 +17,17 @@ import (
 
 // conn implements an interface sql.Conn
 type conn struct {
-	url           *url.URL
-	user          *url.Userinfo
-	location      *time.Location
-	useDBLocation bool
-	transport     *http.Transport
-	cancel        context.CancelFunc
-	txCtx         context.Context
-	stmts         []*stmt
-	logger        *log.Logger
-	closed        int32
+	url                *url.URL
+	user               *url.Userinfo
+	location           *time.Location
+	useDBLocation      bool
+	useGzipCompression bool
+	transport          *http.Transport
+	cancel             context.CancelFunc
+	txCtx              context.Context
+	stmts              []*stmt
+	logger             *log.Logger
+	closed             int32
 }
 
 func newConn(cfg *Config) *conn {
@@ -35,9 +36,10 @@ func newConn(cfg *Config) *conn {
 		logger = log.New(os.Stderr, "clickhouse: ", log.LstdFlags)
 	}
 	c := &conn{
-		url:           cfg.url(map[string]string{"default_format": "TabSeparatedWithNamesAndTypes"}, false),
-		location:      cfg.Location,
-		useDBLocation: cfg.UseDBLocation,
+		url:                cfg.url(map[string]string{"default_format": "TabSeparatedWithNamesAndTypes"}, false),
+		location:           cfg.Location,
+		useDBLocation:      cfg.UseDBLocation,
+		useGzipCompression: cfg.GzipCompression,
 		transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   cfg.Timeout,
@@ -235,6 +237,7 @@ func (c *conn) buildRequest(query string, params []driver.Value, readonly bool) 
 		p, _ := c.user.Password()
 		req.SetBasicAuth(c.user.Username(), p)
 	}
+
 	return req, err
 }
 
