@@ -24,6 +24,8 @@ type Config struct {
 	UseDBLocation   bool
 	GzipCompression bool
 	Params          map[string]string
+	TLSConfig       string
+	KillQueryOnErr  bool // kill query on the server side if we have error from transport
 }
 
 // NewConfig creates a new config with default values
@@ -62,6 +64,9 @@ func (cfg *Config) FormatDSN() string {
 	}
 	if cfg.Debug {
 		query.Set("debug", "1")
+	}
+	if cfg.KillQueryOnErr {
+		query.Set("kill_query", "1")
 	}
 
 	u.RawQuery = query.Encode()
@@ -154,6 +159,10 @@ func parseDSNParams(cfg *Config, params map[string][]string) (err error) {
 		case "enable_http_compression":
 			cfg.GzipCompression, err = strconv.ParseBool(v[0])
 			cfg.Params[k] = v[0]
+		case "tls_config":
+			cfg.TLSConfig = v[0]
+		case "kill_query":
+			cfg.KillQueryOnErr, err = strconv.ParseBool(v[0])
 		default:
 			cfg.Params[k] = v[0]
 		}
