@@ -12,6 +12,8 @@ services:
   - docker
 
 before_install:
+  # https://app.clickup.com/t/2332691/EMB-3019 - Login to Docker with credentials configured via Travis UI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - travis_retry docker pull yandex/clickhouse-server
   - make up_docker_server
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
